@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+
+        .container {
+            width: 400px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-input {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .form-input input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input input:focus {
+            border-color: #a777e3;
+        }
+
+        .options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .size-wrapper, .color-wrapper {
+            width: 48%;
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .options select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .options select:focus {
+            border-color: #a777e3;
+        }
+
+        .options input[type="color"] {
+            width: 100%;
+            height: 40px;
+            padding: 2px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .options input[type="color"]:focus {
+            border-color: #a777e3;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate {
+            background-color: #a777e3;
+            color: white;
+        }
+
+        .generate:hover {
+            background-color: #9a68d6;
+        }
+
+        .download {
+            background-color: #6e8efb;
+            color: white;
+        }
+
+        .download:hover {
+            background-color: #5d7ee6;
+        }
+
+        .buttons button:disabled {
+            background-color: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .qr-code {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 25px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .qr-code img {
+            width: 180px;
+            height: 180px;
+        }
+
+        @media (max-width: 430px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .options {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .size-wrapper, .color-wrapper {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QR Code Generator</h1>
+            <p>Enter text or URL to generate a QR code</p>
+        </div>
+        <div class="form">
+            <div class="form-input">
+                <input type="text" id="qr-text" placeholder="Enter text or URL">
+            </div>
+            <div class="options">
+                <div class="size-wrapper">
+                    <label for="size">Size</label>
+                    <select id="size">
+                        <option value="100">100×100</option>
+                        <option value="200" selected>200×200</option>
+                        <option value="300">300×300</option>
+                        <option value="400">400×400</option>
+                    </select>
+                </div>
+                <div class="color-wrapper">
+                    <label for="color">Color</label>
+                    <input type="color" id="color" value="#000000">
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="generate" id="generate">Generate QR Code</button>
+                <button class="download" id="download" disabled>Download</button>
+            </div>
+        </div>
+        <div class="qr-code" id="qr-code">
+            <img src="" id="qr-image">
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Get elements
+        const qrText = document.getElementById('qr-text');
+        const qrSize = document.getElementById('size');
+        const qrColor = document.getElementById('color');
+        const generateBtn = document.getElementById('generate');
+        const downloadBtn = document.getElementById('download');
+        const qrContainer = document.getElementById('qr-code');
+        const qrImage = document.getElementById('qr-image');
+
+        // Generate QR code
+        generateBtn.addEventListener('click', () => {
+            const text = qrText.value.trim();
+            
+            if (!text) {
+                alert('Please enter text or URL');
+                return;
+            }
+            
+            // Show loading by changing button text
+            generateBtn.textContent = 'Generating...';
+            
+            // Clear previous QR code
+            qrContainer.innerHTML = '';
+            
+            // Generate new QR code
+            setTimeout(() => {
+                const qrCode = new QRCode(qrContainer, {
+                    text: text,
+                    width: parseInt(qrSize.value),
+                    height: parseInt(qrSize.value),
+                    colorDark: qrColor.value,
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                // Show QR code container
+                qrContainer.style.display = 'flex';
+                
+                // Reset button text
+                generateBtn.textContent = 'Generate QR Code';
+                
+                // Enable download button
+                downloadBtn.disabled = false;
+                
+                // Store the QR code image for download
+                setTimeout(() => {
+                    qrImage.src = qrContainer.querySelector('canvas').toDataURL();
+                }, 300);
+            }, 500);
+        });
+
+        // Download QR code
+        downloadBtn.addEventListener('click', () => {
+            if (!qrImage.src) {
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `qrcode-${Date.now()}.png`;
+            link.href = qrImage.src;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Reset form on page load
+        window.onload = () => {
+            qrText.value = '';
+            qrSize.value = '200';
+            qrColor.value = '#000000';
+            qrContainer.style.display = 'none';
+            downloadBtn.disabled = true;
+        };
+    </script>
+</body>
+</html>
